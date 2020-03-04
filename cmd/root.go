@@ -10,12 +10,14 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "blogserver",
-	Short: "Blogserver app",
+	Use:   "organizer",
+	Short: "organizer app",
 	Long:  `Personal project.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		cmd.Help()
+		if err := cmd.Help(); err != nil {
+			log.Println(err)
+			os.Exit(1)
+		}
 	},
 }
 
