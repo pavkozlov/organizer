@@ -9,11 +9,10 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.SetCors)
-	// r.Use(cors.Default())
 	todo := r.Group("/todo")
 	{
-		todo.GET("/", views.GetTodos)
-		todo.GET("/:id", views.GetATodo)
+		todo.GET("/", views.GetTodosList)
+		todo.GET("/:id", views.GetTodo)
 		todo.DELETE("/:id", views.DeleteTodo)
 		todo.POST("/", views.CreateATodo)
 		todo.PUT("/:id", views.UpdateATodo)
