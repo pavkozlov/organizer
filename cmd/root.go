@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/jinzhu/gorm"
 	"github.com/pavkozlov/organizer/config"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
 	"os"
-
-	"github.com/jinzhu/gorm"
-	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
@@ -23,8 +25,26 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	cobra.OnInitialize(func() {
-		databaseURL := config.DbURL(config.BuildDBConfig())
-		config.Db, _ = gorm.Open("postgres", databaseURL)
+
+		viper.SetConfigName("config")
+		viper.AddConfigPath(".")
+		if err := viper.ReadInConfig(); err != nil {
+			log.Println(err)
+			os.Exit(1)
+		}
+		credentials := viper.GetStringMapString("service.db")
+		databaseURI := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
+			credentials["host"],
+			credentials["port"],
+			credentials["username"],
+			credentials["dbname"],
+			credentials["password"])
+
+		conn, err := gorm.Open(credentials["engine"], databaseURI)
+		if err != nil {
+			logrus.Fatal("failed to connect database:", err)
+		}
+		config.Db = conn
 	})
 }
 

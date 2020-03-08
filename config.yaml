@@ -1,0 +1,13 @@
+service:
+  protocol: "http"
+  host: "localhost"
+  port: 8080
+  media-root: "./media/"
+  media-url: "/media/"
+  db:
+    engine: "postgres"
+    dbname: "golang"
+    host: "localhost"
+    port: "5432"
+    username: "postgres"
+    password: "01234567"
