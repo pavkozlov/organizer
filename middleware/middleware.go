@@ -3,8 +3,8 @@ package middleware
 import (
 	"encoding/base64"
 	"github.com/gin-gonic/gin"
-	"github.com/pavkozlov/organizer/config"
 	"github.com/pavkozlov/organizer/models"
+	"github.com/pavkozlov/organizer/settings"
 	"net/http"
 	"strings"
 )
@@ -38,7 +38,7 @@ func CustomBasicAuth() gin.HandlerFunc {
 
 func authenticateUser(username, password string) bool {
 	var user models.User
-	err := config.Db.Where(models.User{Username: username, Password: password}).First(&user)
+	err := settings.Db.Where(models.User{Username: username, Password: password}).First(&user)
 	if err.Error != nil {
 		return false
 	}

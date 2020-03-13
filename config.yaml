@@ -10,4 +10,4 @@ service:
     host: "localhost"
     port: "5432"
     username: "postgres"
-    password: "01234567"
+    password: "postgres"

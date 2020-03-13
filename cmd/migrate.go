@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/pavkozlov/organizer/config"
 	"github.com/pavkozlov/organizer/models"
+	"github.com/pavkozlov/organizer/settings"
 	"github.com/spf13/cobra"
 )
 
@@ -11,9 +11,8 @@ func init() {
 }
 
 var migrateCmd = &cobra.Command{
-	Use:   "migrate",
-	Short: "Make a DB migration",
+	Use: "migrate",
 	Run: func(cmd *cobra.Command, args []string) {
-		config.Db.AutoMigrate(&models.Todo{}, &models.User{})
+		settings.Db.AutoMigrate(&models.Todo{}, &models.User{})
 	},
 }

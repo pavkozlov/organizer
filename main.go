@@ -5,8 +5,6 @@ import (
 	"github.com/pavkozlov/organizer/cmd"
 )
 
-var err error
-
 func main() {
 	cmd.Execute()
 }

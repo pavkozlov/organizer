@@ -3,6 +3,7 @@ module github.com/pavkozlov/organizer
 go 1.13
 
 require (
+	github.com/appleboy/gin-jwt/v2 v2.6.3
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/golang/protobuf v1.3.4 // indirect

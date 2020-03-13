@@ -11,8 +11,7 @@ func init() {
 }
 
 var startCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Make a DB migration",
+	Use: "start",
 	Run: func(cmd *cobra.Command, args []string) {
 		serve()
 	},

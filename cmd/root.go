@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"github.com/pavkozlov/organizer/config"
+	"github.com/pavkozlov/organizer/settings"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -12,9 +12,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "organizer",
-	Short: "organizer app",
-	Long:  `Personal project.`,
+	Use: "organizer",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := cmd.Help(); err != nil {
 			log.Println(err)
@@ -44,7 +42,7 @@ func init() {
 		if err != nil {
 			logrus.Fatal("failed to connect database:", err)
 		}
-		config.Db = conn
+		settings.Db = conn
 	})
 }
 
