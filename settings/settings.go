@@ -6,3 +6,5 @@ import (
 )
 
 var Db *gorm.DB
+
+const SecretKey = "I LOVE GOLANG"
