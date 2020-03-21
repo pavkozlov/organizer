@@ -21,6 +21,8 @@ func SetupRouter() *gin.Engine {
 		todo.PUT("/:id", views.UpdateATodo)
 	}
 	user := r.Group("/user")
+
+	user.Use(middleware.CheckForm())
 	{
 		user.POST("/login", views.Login)
 		user.POST("/reg", views.Register)
