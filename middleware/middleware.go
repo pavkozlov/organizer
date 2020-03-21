@@ -45,14 +45,3 @@ func authenticateUser(username, password string) bool {
 	return true
 
 }
-
-func CheckForm() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		username, password := ctx.PostForm("username"), ctx.PostForm("password")
-		if len(username) == 0 || len(password) == 0 {
-			ctx.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-		ctx.Next()
-	}
-}

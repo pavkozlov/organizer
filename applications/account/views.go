@@ -5,13 +5,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pavkozlov/organizer/settings"
 	"net/http"
+	"strings"
 	"time"
 )
 
 func Register(ctx *gin.Context) {
 	salt := generateSalt(64)
-	password := encryptPassword(ctx.PostForm("password"), salt)
-	username := ctx.PostForm("username")
+
+	username, password := ctx.PostForm("username"), ctx.PostForm("password")
+	if len(username) == 0 || len(password) == 0 {
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
 
 	user := User{
 		Username: username,
@@ -46,4 +51,32 @@ func Login(ctx *gin.Context) {
 	tokenString, _ := token.SignedString([]byte(settings.SecretKey))
 
 	ctx.JSON(http.StatusOK, gin.H{"token": tokenString})
+}
+
+func Auth(ctx *gin.Context) {
+
+	var tokenString string
+	auth := strings.SplitN(ctx.GetHeader("Authorization"), " ", 2)
+	if len(auth) == 2 && auth[0] == "Bearer" {
+		tokenString = auth[1]
+	} else {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(settings.SecretKey), nil
+	})
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// todo add validate expired < now
+		ctx.JSON(http.StatusOK, gin.H{
+			"id":       claims["id"],
+			"username": claims["username"],
+			"expired":  claims["expired"],
+		})
+	} else {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad token"})
+	}
+
 }

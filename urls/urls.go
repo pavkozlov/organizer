@@ -12,7 +12,6 @@ func SetupRouter() *gin.Engine {
 	r.Use(middleware.SetCors)
 
 	//r.Use(middleware.CustomBasicAuth())
-
 	todo := r.Group("/todo")
 	{
 		todo.GET("/", views.GetTodosList)
@@ -22,11 +21,10 @@ func SetupRouter() *gin.Engine {
 		todo.PUT("/:id", views.UpdateATodo)
 	}
 	user := r.Group("/user")
-
-	user.Use(middleware.CheckForm())
 	{
 		user.POST("/login", account.Login)
 		user.POST("/reg", account.Register)
+		user.POST("/auth", account.Auth)
 	}
 	return r
 }
