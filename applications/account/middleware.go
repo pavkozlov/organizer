@@ -1,19 +1,13 @@
-package middleware
+package account
 
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/pavkozlov/organizer/settings"
+	"github.com/pavkozlov/organizer/organizer"
 	"net/http"
 	"strings"
 	"time"
 )
-
-func SetCors(c *gin.Context) {
-	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	c.Next()
-}
 
 func JWTAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -25,7 +19,7 @@ func JWTAuth() gin.HandlerFunc {
 
 		tokenString := auth[1]
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte(settings.SecretKey), nil
+			return []byte(organizer.SecretKey), nil
 		})
 
 		claims, ok := token.Claims.(jwt.MapClaims)

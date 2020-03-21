@@ -4,7 +4,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/pavkozlov/organizer/settings"
+	"github.com/pavkozlov/organizer/organizer"
 	"math/rand"
 	"time"
 )
@@ -29,7 +29,7 @@ func encryptPassword(password, salt string) string {
 
 func authorize(username, password string) bool {
 	user := User{}
-	e := settings.Db.Where("username = ?", username).Find(&user)
+	e := organizer.Db.Where("username = ?", username).Find(&user)
 	if e.Error != nil {
 		return false
 	}
@@ -48,6 +48,6 @@ func generateToken(username string, id uint) (t string) {
 		"id":       id,
 		"expired":  time.Now().Add(time.Minute * 30).Unix(),
 	})
-	t, _ = token.SignedString([]byte(settings.SecretKey))
+	t, _ = token.SignedString([]byte(organizer.SecretKey))
 	return t
 }

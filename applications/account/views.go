@@ -3,7 +3,7 @@ package account
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/pavkozlov/organizer/settings"
+	"github.com/pavkozlov/organizer/organizer"
 	"net/http"
 	"time"
 )
@@ -24,9 +24,9 @@ func Register(ctx *gin.Context) {
 
 	if err := saveUser(&user); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	} else {
-		ctx.JSON(http.StatusOK, user)
+		return
 	}
+	ctx.JSON(http.StatusOK, user)
 
 }
 
@@ -43,7 +43,7 @@ func Login(ctx *gin.Context) {
 		"id":       user.ID,
 		"expired":  time.Now().Add(time.Minute * 30).Unix(),
 	})
-	tokenString, _ := token.SignedString([]byte(settings.SecretKey))
+	tokenString, _ := token.SignedString([]byte(organizer.SecretKey))
 
 	userAgent := ctx.GetHeader("User-Agent")
 	session := Sessions{UserID: user.ID, UserAgent: userAgent}

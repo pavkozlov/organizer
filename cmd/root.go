@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"github.com/pavkozlov/organizer/settings"
+	"github.com/pavkozlov/organizer/organizer"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -42,8 +42,8 @@ func init() {
 		if err != nil {
 			logrus.Fatal("failed to connect database:", err)
 		}
-		settings.Db = conn
-		settings.Db.LogMode(true)
+		organizer.Db = conn
+		organizer.Db.LogMode(true)
 	})
 }
 
