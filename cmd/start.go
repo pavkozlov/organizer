@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/pavkozlov/organizer/urls"
-
 	"github.com/spf13/cobra"
 )
 
@@ -11,14 +10,9 @@ func init() {
 }
 
 var startCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Make a DB migration",
+	Use: "start",
 	Run: func(cmd *cobra.Command, args []string) {
-		serve()
+		router := urls.SetupRouter()
+		router.Run()
 	},
-}
-
-func serve() {
-	router := urls.SetupRouter()
-	router.Run()
 }

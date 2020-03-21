@@ -1,4 +1,4 @@
-package config
+package settings
 
 import (
 	"github.com/jinzhu/gorm"
@@ -6,3 +6,5 @@ import (
 )
 
 var Db *gorm.DB
+
+const SecretKey = "I LOVE GOLANG"
