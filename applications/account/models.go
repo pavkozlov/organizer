@@ -1,4 +1,4 @@
-package models
+package account
 
 type User struct {
 	ID       uint   `gorm:"AUTO_INCREMENT;UNIQUE;PRIMARY_KEY;" json:"id"`

@@ -2,6 +2,7 @@ package urls
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pavkozlov/organizer/applications/account"
 	"github.com/pavkozlov/organizer/middleware"
 	"github.com/pavkozlov/organizer/views"
 )
@@ -24,8 +25,8 @@ func SetupRouter() *gin.Engine {
 
 	user.Use(middleware.CheckForm())
 	{
-		user.POST("/login", views.Login)
-		user.POST("/reg", views.Register)
+		user.POST("/login", account.Login)
+		user.POST("/reg", account.Register)
 	}
 	return r
 }
