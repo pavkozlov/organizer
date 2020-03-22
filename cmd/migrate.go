@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/pavkozlov/organizer/applications/account"
-	"github.com/pavkozlov/organizer/models"
-	"github.com/pavkozlov/organizer/settings"
+	"github.com/pavkozlov/organizer/applications/todo"
+	"github.com/pavkozlov/organizer/organizer"
 	"github.com/spf13/cobra"
 )
 
@@ -14,8 +14,8 @@ func init() {
 var migrateCmd = &cobra.Command{
 	Use: "migrate",
 	Run: func(cmd *cobra.Command, args []string) {
-		settings.Db.AutoMigrate(
-			&models.Todo{},
+		organizer.Db.AutoMigrate(
+			&todo.Todo{},
 			&account.User{},
 			&account.Sessions{},
 		)

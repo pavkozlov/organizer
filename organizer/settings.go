@@ -1,4 +1,4 @@
-package settings
+package organizer
 
 import (
 	"github.com/jinzhu/gorm"
