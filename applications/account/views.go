@@ -47,11 +47,42 @@ func Login(ctx *gin.Context) {
 		"id":       user.ID,
 		"expired":  time.Now().Add(time.Minute * 30).Unix(),
 	})
-
 	tokenString, _ := token.SignedString([]byte(settings.SecretKey))
 
 	s := Sessions{}
 	settings.Db.Where(Sessions{UserID: user.ID, UserAgent: userAgent}).Attrs(Sessions{RefreshToken: generateRandomString(128)}).FirstOrCreate(&s)
 
 	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokenString, "refreshToken": s.RefreshToken})
+}
+
+func RefreshToken(ctx *gin.Context) {
+	userAgent := ctx.GetHeader("User-Agent")
+	refreshToken := ctx.PostForm("refreshToken")
+	if len(refreshToken) != 128 {
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	s := Sessions{}
+	u := User{}
+	settings.Db.Where(&Sessions{RefreshToken: refreshToken, UserAgent: userAgent}).Find(&s)
+	settings.Db.Where("id = ?", s.UserID).Find(&u)
+
+	if s.ExpiresIn.Unix() <= time.Now().Unix() {
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	newAt := generateToken(u.Username, u.ID)
+
+	settings.Db.Delete(&s)
+
+	newRt := Sessions{RefreshToken: generateRandomString(128), UserID: u.ID, UserAgent: userAgent}
+	settings.Db.Create(&newRt)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"accessToken":  newAt,
+		"refreshToken": newRt.RefreshToken,
+	})
+
 }

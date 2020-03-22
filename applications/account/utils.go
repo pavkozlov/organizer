@@ -3,6 +3,7 @@ package account
 import (
 	"crypto/sha512"
 	"encoding/hex"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/pavkozlov/organizer/settings"
 	"math/rand"
 	"time"
@@ -39,4 +40,14 @@ func authorize(username, password string) bool {
 		return false
 	}
 
+}
+
+func generateToken(username string, id uint) (t string) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": username,
+		"id":       id,
+		"expired":  time.Now().Add(time.Minute * 30).Unix(),
+	})
+	t, _ = token.SignedString([]byte(settings.SecretKey))
+	return t
 }

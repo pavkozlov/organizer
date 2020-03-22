@@ -25,6 +25,7 @@ func SetupRouter() *gin.Engine {
 	{
 		user.POST("/login", account.Login)
 		user.POST("/reg", account.Register)
+		user.POST("/refresh", account.RefreshToken)
 	}
 	return r
 }
