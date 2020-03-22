@@ -14,6 +14,10 @@ func init() {
 var migrateCmd = &cobra.Command{
 	Use: "migrate",
 	Run: func(cmd *cobra.Command, args []string) {
-		settings.Db.AutoMigrate(&models.Todo{}, &account.User{})
+		settings.Db.AutoMigrate(
+			&models.Todo{},
+			&account.User{},
+			&account.Token{},
+		)
 	},
 }

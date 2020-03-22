@@ -20,7 +20,7 @@ func Register(ctx *gin.Context) {
 	user := User{
 		Username: username,
 		Salt:     salt,
-		Password: password,
+		Password: encryptPassword(password, salt),
 	}
 
 	if err := saveUser(&user); err != nil {

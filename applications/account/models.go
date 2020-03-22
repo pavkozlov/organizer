@@ -1,8 +1,20 @@
 package account
 
+import (
+	"github.com/jinzhu/gorm"
+)
+
 type User struct {
-	ID       uint   `gorm:"AUTO_INCREMENT;UNIQUE;PRIMARY_KEY;" json:"id"`
-	Username string `gorm:"UNIQUE" form:"username" json:"username" binding:"required"`
-	Password string `gorm:"NOT NULL" json:"-"`
-	Salt     string `gorm:"NOT NULL" form:"-" json:"-"`
+	gorm.Model
+	Username string  `gorm:"not null;UNIQUE" form:"username" json:"username"`
+	Password string  `gorm:"not null" json:"-"`
+	Salt     string  `gorm:"not null" json:"-"`
+	Tokens   []Token `gorm:"foreignkey:UserID;association_foreignkey:TokenID"`
+}
+
+type Token struct {
+	gorm.Model
+	UserID       uint
+	RefreshToken string
+	ExpiresIn    int
 }

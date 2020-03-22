@@ -32,9 +32,8 @@ func authorize(username, password string) bool {
 	if e.Error != nil {
 		return false
 	}
-	stringPassword := encryptPassword(password, user.Salt)
 
-	if user.Password != stringPassword {
+	if user.Password == encryptPassword(password, user.Salt) {
 		return true
 	} else {
 		return false
