@@ -43,6 +43,7 @@ func init() {
 			logrus.Fatal("failed to connect database:", err)
 		}
 		settings.Db = conn
+		settings.Db.LogMode(true)
 	})
 }
 

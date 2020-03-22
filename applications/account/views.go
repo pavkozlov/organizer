@@ -9,14 +9,13 @@ import (
 )
 
 func Register(ctx *gin.Context) {
-	salt := generateRandomString(64)
-
 	username, password := ctx.PostForm("username"), ctx.PostForm("password")
 	if len(username) == 0 || len(password) == 0 {
-		ctx.AbortWithStatus(http.StatusBadRequest)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid username/password"})
 		return
 	}
 
+	salt := generateRandomString(64)
 	user := User{
 		Username: username,
 		Salt:     salt,
@@ -33,10 +32,7 @@ func Register(ctx *gin.Context) {
 
 func Login(ctx *gin.Context) {
 	user := User{}
-	username := ctx.PostForm("username")
-	password := ctx.PostForm("password")
-	userAgent := ctx.GetHeader("User-Agent")
-
+	username, password := ctx.PostForm("username"), ctx.PostForm("password")
 	if getUserByUsername(&user, username) != nil || !authorize(username, password) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid username/password"})
 		return
@@ -49,39 +45,48 @@ func Login(ctx *gin.Context) {
 	})
 	tokenString, _ := token.SignedString([]byte(settings.SecretKey))
 
-	s := Sessions{}
-	settings.Db.Where(Sessions{UserID: user.ID, UserAgent: userAgent}).Attrs(Sessions{RefreshToken: generateRandomString(128)}).FirstOrCreate(&s)
+	userAgent := ctx.GetHeader("User-Agent")
+	session := Sessions{UserID: user.ID, UserAgent: userAgent}
 
-	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokenString, "refreshToken": s.RefreshToken})
+	if err := getOrCrateRefreshToken(&session, generateRandomString(128)); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokenString, "refreshToken": session.RefreshToken})
 }
 
 func RefreshToken(ctx *gin.Context) {
-	userAgent := ctx.GetHeader("User-Agent")
 	refreshToken := ctx.PostForm("refreshToken")
 	if len(refreshToken) != 128 {
-		ctx.AbortWithStatus(http.StatusBadRequest)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad token"})
 		return
 	}
 
-	s := Sessions{}
-	u := User{}
-	settings.Db.Where(&Sessions{RefreshToken: refreshToken, UserAgent: userAgent}).Find(&s)
-	settings.Db.Where("id = ?", s.UserID).Find(&u)
-
-	if s.ExpiresIn.Unix() <= time.Now().Unix() {
-		ctx.AbortWithStatus(http.StatusBadRequest)
+	refreshTokenSql := refreshTokenRaw{}
+	if err := getRefreshToken(&refreshTokenSql, refreshToken); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	newAt := generateToken(u.Username, u.ID)
+	if refreshTokenSql.ExpiresIn.Unix() <= time.Now().Unix() {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Token expired"})
+		return
+	}
 
-	settings.Db.Delete(&s)
+	if err := deleteRefreshToken(refreshTokenSql.ID); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	newRt := Sessions{RefreshToken: generateRandomString(128), UserID: u.ID, UserAgent: userAgent}
-	settings.Db.Create(&newRt)
+	newRt := Sessions{RefreshToken: generateRandomString(128), UserID: refreshTokenSql.UserID, UserAgent: ctx.GetHeader("User-Agent")}
+	if err := createRefreshToken(&newRt); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"accessToken":  newAt,
+		"accessToken":  generateToken(refreshTokenSql.Username, refreshTokenSql.UserID),
 		"refreshToken": newRt.RefreshToken,
 	})
 
