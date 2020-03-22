@@ -2,19 +2,28 @@ package account
 
 import (
 	"github.com/jinzhu/gorm"
+	"time"
 )
 
 type User struct {
 	gorm.Model
-	Username string  `gorm:"not null;UNIQUE" form:"username" json:"username"`
-	Password string  `gorm:"not null" json:"-"`
-	Salt     string  `gorm:"not null" json:"-"`
-	Tokens   []Token `gorm:"foreignkey:UserID;association_foreignkey:TokenID"`
+	Username string `gorm:"not null;UNIQUE" form:"username" json:"username"`
+	Password string `gorm:"not null" json:"-"`
+	Salt     string `gorm:"not null" json:"-"`
+	Session  []Sessions
 }
 
-type Token struct {
+type Sessions struct {
 	gorm.Model
-	UserID       uint
-	RefreshToken string
-	ExpiresIn    int
+	UserID       uint      `gorm:"not null"`
+	RefreshToken string    `gorm:"not null"`
+	ExpiresIn    time.Time `gorm:"not null"`
+	UserAgent    string
+}
+
+func (u *Sessions) AfterCreate(tx *gorm.DB) (err error) {
+	utc, _ := time.LoadLocation("Europe/Moscow")
+	expires := time.Now().Add(time.Hour * 60 * 24).In(utc)
+	tx.Model(u).Update("ExpiresIn", expires)
+	return
 }

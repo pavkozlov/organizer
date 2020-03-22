@@ -10,10 +10,10 @@ import (
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func generateSalt(saltLen int) string {
+func generateRandomString(strtLen int) string {
 	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 	salt := ""
-	for i := 0; i < saltLen; i++ {
+	for i := 0; i < strtLen; i++ {
 		salt += string(charset[seededRand.Intn(len(charset))])
 	}
 	return salt

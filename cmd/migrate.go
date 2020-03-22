@@ -17,7 +17,7 @@ var migrateCmd = &cobra.Command{
 		settings.Db.AutoMigrate(
 			&models.Todo{},
 			&account.User{},
-			&account.Token{},
+			&account.Sessions{},
 		)
 	},
 }

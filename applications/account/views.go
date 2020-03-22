@@ -9,7 +9,7 @@ import (
 )
 
 func Register(ctx *gin.Context) {
-	salt := generateSalt(64)
+	salt := generateRandomString(64)
 
 	username, password := ctx.PostForm("username"), ctx.PostForm("password")
 	if len(username) == 0 || len(password) == 0 {
@@ -35,6 +35,7 @@ func Login(ctx *gin.Context) {
 	user := User{}
 	username := ctx.PostForm("username")
 	password := ctx.PostForm("password")
+	userAgent := ctx.GetHeader("User-Agent")
 
 	if getUserByUsername(&user, username) != nil || !authorize(username, password) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid username/password"})
@@ -49,5 +50,8 @@ func Login(ctx *gin.Context) {
 
 	tokenString, _ := token.SignedString([]byte(settings.SecretKey))
 
-	ctx.JSON(http.StatusOK, gin.H{"token": tokenString})
+	s := Sessions{}
+	settings.Db.Where(Sessions{UserID: user.ID, UserAgent: userAgent}).Attrs(Sessions{RefreshToken: generateRandomString(128)}).FirstOrCreate(&s)
+
+	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokenString, "refreshToken": s.RefreshToken})
 }
