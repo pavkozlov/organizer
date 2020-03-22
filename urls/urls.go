@@ -11,8 +11,8 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.SetCors)
 
-	//r.Use(middleware.CustomBasicAuth())
 	todo := r.Group("/todo")
+	todo.Use(middleware.JWTAuth())
 	{
 		todo.GET("/", views.GetTodosList)
 		todo.GET("/:id", views.GetTodo)
@@ -20,11 +20,11 @@ func SetupRouter() *gin.Engine {
 		todo.POST("/", views.CreateATodo)
 		todo.PUT("/:id", views.UpdateATodo)
 	}
+
 	user := r.Group("/user")
 	{
 		user.POST("/login", account.Login)
 		user.POST("/reg", account.Register)
-		user.POST("/auth", account.Auth)
 	}
 	return r
 }

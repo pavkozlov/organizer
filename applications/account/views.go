@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pavkozlov/organizer/settings"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -37,7 +36,7 @@ func Login(ctx *gin.Context) {
 	username := ctx.PostForm("username")
 	password := ctx.PostForm("password")
 
-	if getUserByUsername(&user, username) != nil || authorize(username, password) == false {
+	if getUserByUsername(&user, username) != nil || !authorize(username, password) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid username/password"})
 		return
 	}
@@ -45,38 +44,10 @@ func Login(ctx *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.Username,
 		"id":       user.ID,
-		"expired":  time.Now().Local().Add(time.Hour * 24).Unix(),
+		"expired":  time.Now().Add(time.Minute * 30).Unix(),
 	})
 
 	tokenString, _ := token.SignedString([]byte(settings.SecretKey))
 
 	ctx.JSON(http.StatusOK, gin.H{"token": tokenString})
-}
-
-func Auth(ctx *gin.Context) {
-
-	var tokenString string
-	auth := strings.SplitN(ctx.GetHeader("Authorization"), " ", 2)
-	if len(auth) == 2 && auth[0] == "Bearer" {
-		tokenString = auth[1]
-	} else {
-		ctx.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(settings.SecretKey), nil
-	})
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// todo add validate expired < now
-		ctx.JSON(http.StatusOK, gin.H{
-			"id":       claims["id"],
-			"username": claims["username"],
-			"expired":  claims["expired"],
-		})
-	} else {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad token"})
-	}
-
 }

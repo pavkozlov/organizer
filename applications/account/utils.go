@@ -32,13 +32,9 @@ func authorize(username, password string) bool {
 	if e.Error != nil {
 		return false
 	}
+	stringPassword := encryptPassword(password, user.Salt)
 
-	sha_512 := sha512.New()
-	sha_512.Write([]byte(password + user.Salt))
-	encryptedPassword := sha_512.Sum([]byte(""))
-	stringPassword := hex.EncodeToString(encryptedPassword)
-
-	if user.Password == stringPassword {
+	if user.Password != stringPassword {
 		return true
 	} else {
 		return false

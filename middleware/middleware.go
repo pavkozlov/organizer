@@ -1,12 +1,12 @@
 package middleware
 
 import (
-	"encoding/base64"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/pavkozlov/organizer/applications/account"
 	"github.com/pavkozlov/organizer/settings"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func SetCors(c *gin.Context) {
@@ -15,33 +15,31 @@ func SetCors(c *gin.Context) {
 	c.Next()
 }
 
-func CustomBasicAuth() gin.HandlerFunc {
-
-	return func(c *gin.Context) {
-		auth := strings.SplitN(c.Request.Header.Get("Authorization"), " ", 2)
-		if len(auth) != 2 || auth[0] != "Basic" {
-			c.AbortWithStatus(http.StatusUnauthorized)
+func JWTAuth() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		auth := strings.SplitN(ctx.GetHeader("Authorization"), " ", 2)
+		if len(auth) != 2 || auth[0] != "Bearer" {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
-		payload, _ := base64.StdEncoding.DecodeString(auth[1])
-		pair := strings.SplitN(string(payload), ":", 2)
+		tokenString := auth[1]
+		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return []byte(settings.SecretKey), nil
+		})
 
-		if len(pair) != 2 || !authenticateUser(pair[0], pair[1]) {
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid || int64(claims["expired"].(float64))-time.Now().Unix() <= 0 {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad token"})
 		}
 
-		c.Next()
-	}
-}
+		user := gin.H{
+			"id":       claims["id"],
+			"username": claims["username"],
+		}
 
-func authenticateUser(username, password string) bool {
-	var user account.User
-	err := settings.Db.Where(account.User{Username: username, Password: password}).First(&user)
-	if err.Error != nil {
-		return false
-	}
-	return true
+		ctx.Set("user", user)
+		ctx.Next()
 
+	}
 }
