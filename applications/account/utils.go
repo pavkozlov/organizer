@@ -27,8 +27,7 @@ func encryptPassword(password, salt string) string {
 	return hex.EncodeToString(encryptedPassword)
 }
 
-func authorize(username, password string) bool {
-	user := User{}
+func authorize(username, password string, user *User) bool {
 	e := organizer.Db.Where("username = ?", username).Find(&user)
 	if e.Error != nil {
 		return false

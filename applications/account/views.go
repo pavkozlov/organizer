@@ -8,18 +8,23 @@ import (
 	"time"
 )
 
+type userForm struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 func Register(ctx *gin.Context) {
-	username, password := ctx.PostForm("username"), ctx.PostForm("password")
-	if len(username) == 0 || len(password) == 0 {
+	json := userForm{}
+	if e := ctx.ShouldBind(&json); e != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid username/password"})
 		return
 	}
 
 	salt := generateRandomString(64)
 	user := User{
-		Username: username,
+		Username: json.Username,
 		Salt:     salt,
-		Password: encryptPassword(password, salt),
+		Password: encryptPassword(json.Password, salt),
 	}
 
 	if err := saveUser(&user); err != nil {
@@ -32,12 +37,12 @@ func Register(ctx *gin.Context) {
 
 func Login(ctx *gin.Context) {
 	user := User{}
-	username, password := ctx.PostForm("username"), ctx.PostForm("password")
-	if getUserByUsername(&user, username) != nil || !authorize(username, password) {
+	json := userForm{}
+
+	if e := ctx.ShouldBind(&json); e != nil || !authorize(json.Username, json.Password, &user) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid username/password"})
 		return
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.Username,
 		"id":       user.ID,
@@ -90,4 +95,9 @@ func RefreshToken(ctx *gin.Context) {
 		"refreshToken": newRt.RefreshToken,
 	})
 
+}
+
+func Profile(ctx *gin.Context) {
+	u, _ := ctx.Get("user")
+	ctx.JSON(http.StatusOK, u)
 }
