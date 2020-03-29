@@ -13,6 +13,10 @@ type userForm struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type refreshToken struct {
+	RefreshToken string `json:"refreshToken" binding:"required"`
+}
+
 func Register(ctx *gin.Context) {
 	json := userForm{}
 	if e := ctx.ShouldBind(&json); e != nil {
@@ -62,14 +66,15 @@ func Login(ctx *gin.Context) {
 }
 
 func RefreshToken(ctx *gin.Context) {
-	refreshToken := ctx.PostForm("refreshToken")
-	if len(refreshToken) != 128 {
+
+	json := refreshToken{}
+	if e:= ctx.ShouldBind(&json); e != nil{
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad token"})
 		return
 	}
 
 	refreshTokenSql := refreshTokenRaw{}
-	if err := getRefreshToken(&refreshTokenSql, refreshToken); err != nil {
+	if err := getRefreshToken(&refreshTokenSql, json.RefreshToken); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
