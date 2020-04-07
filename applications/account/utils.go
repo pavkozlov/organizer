@@ -3,14 +3,16 @@ package account
 import (
 	"crypto/sha512"
 	"encoding/hex"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/pavkozlov/organizer/organizer"
 	"math/rand"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/pavkozlov/organizer/organizer"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+// Генерация рандомной строки заданной длины
 func generateRandomString(strtLen int) string {
 	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 	salt := ""
@@ -20,6 +22,7 @@ func generateRandomString(strtLen int) string {
 	return salt
 }
 
+// Зашифровать пароль
 func encryptPassword(password, salt string) string {
 	sha_512 := sha512.New()
 	sha_512.Write([]byte(password + salt))
@@ -27,9 +30,10 @@ func encryptPassword(password, salt string) string {
 	return hex.EncodeToString(encryptedPassword)
 }
 
+// Авторизация. Находит пользователя в БД, сверяет пароль
 func authorize(username, password string, user *User) bool {
-	e := organizer.Db.Where("username = ?", username).Find(&user)
-	if e.Error != nil {
+
+	if getUser(user, username) != nil {
 		return false
 	}
 
@@ -41,6 +45,7 @@ func authorize(username, password string, user *User) bool {
 
 }
 
+// Генерация аццесс токена
 func generateToken(username string, id uint) (t string) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,

@@ -9,10 +9,4 @@ func SetupRouter(r *gin.Engine) {
 		userRouter.POST("/reg", Register)
 		userRouter.POST("/refresh", RefreshToken)
 	}
-
-	profileRouter := r.Group("/user")
-	profileRouter.Use(JWTAuth())
-	{
-		profileRouter.GET("/me", Profile)
-	}
 }

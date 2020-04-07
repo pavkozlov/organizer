@@ -1,10 +1,12 @@
 package account
 
 import (
-	"github.com/jinzhu/gorm"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
+// Модель пользователя
 type User struct {
 	gorm.Model
 	Username string     `gorm:"not null;UNIQUE" form:"username" json:"username"`
@@ -13,6 +15,7 @@ type User struct {
 	Session  []Sessions `gorm:"foreignkey:UserID"`
 }
 
+// Модель для хранения рефреш токена
 type Sessions struct {
 	gorm.Model
 	UserID       uint      `gorm:"not null"`
@@ -21,6 +24,7 @@ type Sessions struct {
 	UserAgent    string
 }
 
+// Автоматическое добавление даты истечения рефреш токена (60 дней)
 func (s *Sessions) AfterCreate(tx *gorm.DB) (err error) {
 	utc, _ := time.LoadLocation("Europe/Moscow")
 	expires := time.Now().Add(time.Hour * 60 * 24).In(utc)

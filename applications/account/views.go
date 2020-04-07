@@ -1,22 +1,15 @@
 package account
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/pavkozlov/organizer/organizer"
-	"net/http"
-	"time"
 )
 
-type userForm struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-type refreshToken struct {
-	RefreshToken string `json:"refreshToken" binding:"required"`
-}
-
+// Эндпоинт для регистрации
 func Register(ctx *gin.Context) {
 	json := userForm{}
 	if e := ctx.ShouldBind(&json); e != nil {
@@ -31,7 +24,7 @@ func Register(ctx *gin.Context) {
 		Password: encryptPassword(json.Password, salt),
 	}
 
-	if err := saveUser(&user); err != nil {
+	if err := createUser(&user); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -39,6 +32,7 @@ func Register(ctx *gin.Context) {
 
 }
 
+// Эндпоинт для входа
 func Login(ctx *gin.Context) {
 	user := User{}
 	json := userForm{}
@@ -65,10 +59,11 @@ func Login(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokenString, "refreshToken": session.RefreshToken})
 }
 
+// Эндпоинт для обновления токена
 func RefreshToken(ctx *gin.Context) {
 
 	json := refreshToken{}
-	if e:= ctx.ShouldBind(&json); e != nil{
+	if e := ctx.ShouldBind(&json); e != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad token"})
 		return
 	}
@@ -100,9 +95,4 @@ func RefreshToken(ctx *gin.Context) {
 		"refreshToken": newRt.RefreshToken,
 	})
 
-}
-
-func Profile(ctx *gin.Context) {
-	u, _ := ctx.Get("user")
-	ctx.JSON(http.StatusOK, u)
 }
