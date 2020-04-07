@@ -1,28 +1,30 @@
 package account
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/pavkozlov/organizer/organizer"
-	"net/http"
-	"time"
 )
 
+// Эндпоинт для регистрации
 func Register(ctx *gin.Context) {
-	username, password := ctx.PostForm("username"), ctx.PostForm("password")
-	if len(username) == 0 || len(password) == 0 {
+	json := userForm{}
+	if e := ctx.ShouldBind(&json); e != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid username/password"})
 		return
 	}
 
 	salt := generateRandomString(64)
 	user := User{
-		Username: username,
+		Username: json.Username,
 		Salt:     salt,
-		Password: encryptPassword(password, salt),
+		Password: encryptPassword(json.Password, salt),
 	}
 
-	if err := saveUser(&user); err != nil {
+	if err := createUser(&user); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -30,14 +32,15 @@ func Register(ctx *gin.Context) {
 
 }
 
+// Эндпоинт для входа
 func Login(ctx *gin.Context) {
 	user := User{}
-	username, password := ctx.PostForm("username"), ctx.PostForm("password")
-	if getUserByUsername(&user, username) != nil || !authorize(username, password) {
+	json := userForm{}
+
+	if e := ctx.ShouldBind(&json); e != nil || !authorize(json.Username, json.Password, &user) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid username/password"})
 		return
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.Username,
 		"id":       user.ID,
@@ -56,15 +59,17 @@ func Login(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokenString, "refreshToken": session.RefreshToken})
 }
 
+// Эндпоинт для обновления токена
 func RefreshToken(ctx *gin.Context) {
-	refreshToken := ctx.PostForm("refreshToken")
-	if len(refreshToken) != 128 {
+
+	json := refreshToken{}
+	if e := ctx.ShouldBind(&json); e != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad token"})
 		return
 	}
 
 	refreshTokenSql := refreshTokenRaw{}
-	if err := getRefreshToken(&refreshTokenSql, refreshToken); err != nil {
+	if err := getRefreshToken(&refreshTokenSql, json.RefreshToken); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

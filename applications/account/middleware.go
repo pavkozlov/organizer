@@ -1,14 +1,16 @@
 package account
 
 import (
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	"github.com/pavkozlov/organizer/organizer"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+	"github.com/pavkozlov/organizer/organizer"
 )
 
+// Middleware для JWT Авторизации. Возвращает 401 если что то пошло не так
 func JWTAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		auth := strings.SplitN(ctx.GetHeader("Authorization"), " ", 2)

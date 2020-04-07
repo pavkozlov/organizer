@@ -2,10 +2,10 @@ package account
 
 import (
 	"github.com/pavkozlov/organizer/organizer"
-	"time"
 )
 
-const REFRESHTOKEN_QUERY = `
+// SQL для получения юзера по рефреш токену
+const refreshTokenQuery = `
 	SELECT 
 		sessions.deleted_at,
 		sessions.id,
@@ -18,19 +18,15 @@ const REFRESHTOKEN_QUERY = `
 	AND sessions.deleted_at IS null
 	`
 
-type refreshTokenRaw struct {
-	ID, UserID uint
-	ExpiresIn  time.Time
-	Username   string
-}
-
+// Получение данных по рефреш токену
 func getRefreshToken(rt *refreshTokenRaw, refreshToken string) (err error) {
-	if err = organizer.Db.Raw(REFRESHTOKEN_QUERY, refreshToken).Scan(&rt).Error; err != nil {
+	if err = organizer.Db.Raw(refreshTokenQuery, refreshToken).Scan(&rt).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
+// Отметка токена как удалённого
 func deleteRefreshToken(id uint) (err error) {
 	if err = organizer.Db.Where("id = ?", id).Delete(Sessions{}).Error; err != nil {
 		return err
@@ -38,6 +34,7 @@ func deleteRefreshToken(id uint) (err error) {
 	return nil
 }
 
+// Создание рефреш токена
 func createRefreshToken(s *Sessions) (err error) {
 	if err = organizer.Db.Create(&s).Error; err != nil {
 		return err
@@ -45,6 +42,7 @@ func createRefreshToken(s *Sessions) (err error) {
 	return nil
 }
 
+// Создание или получение уже имеющегося рефшер токена
 func getOrCrateRefreshToken(s *Sessions, token string) (err error) {
 	if err = organizer.Db.Where(&s).Attrs(Sessions{RefreshToken: token}).FirstOrCreate(&s).Error; err != nil {
 		return err
@@ -52,17 +50,19 @@ func getOrCrateRefreshToken(s *Sessions, token string) (err error) {
 	return nil
 }
 
-func saveUser(user *User) (err error) {
+// Создание пользователя
+func createUser(user *User) (err error) {
 	if err = organizer.Db.Save(&user).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func getUserByUsername(user *User, username string) (err error) {
+// Получение пользователя
+func getUser(user *User, username string) (err error) {
 	if err = organizer.Db.Where("username = ?", username).Find(&user).Error; err != nil {
 		return err
-	} else {
-		return nil
 	}
+	return nil
+
 }

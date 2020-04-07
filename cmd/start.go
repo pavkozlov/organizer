@@ -15,8 +15,8 @@ var startCmd = &cobra.Command{
 	Use: "start",
 	Run: func(cmd *cobra.Command, args []string) {
 		router := organizer.SetupRouter()
-		account.SetupRouter(router)
 		todo.SetupRouter(router)
+		account.SetupRouter(router)
 		router.Run(":8080")
 	},
 }
