@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:alpine
+    container_name: postgres
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data/pgdata
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: golang
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+  server:
+    build: .
+    command: sh -c "./main migrate && ./main start"
+    environment:
+      - GIN_MODE=release
+    container_name: server
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    links:
+      - db
